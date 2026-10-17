@@ -1,0 +1,6 @@
+#!/bin/sh
+# Copy to the SD card as /etc/extras.txt (runs near the end of rcS).
+# If the card already has an extras.txt (e.g. from px4_flow_angle), append this line instead.
+# Start order relative to the ESC drivers does not matter: the module picks up
+# esc_status instances whenever they are advertised.
+esc_status_merge start
