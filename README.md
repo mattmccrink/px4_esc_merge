@@ -9,7 +9,13 @@ consumer subscribes to instance 0 only (`FailureDetector.hpp` even carries a `//
 With mixed ESC protocols, whichever driver advertises first is the only one QGC displays and the only
 one health-checked. The rest are silently ignored.
 
-Targets **PX4 v1.17.0**. Built via `EXTERNAL_MODULES_LOCATION`, same pattern as `px4_flow_angle`.
+Targets **PX4 v1.17.0**. Two ways to build it:
+
+1. **In-tree, as a submodule of the Compressor PX4 fork (recommended).** The fork carries the
+   consumer repoint as ordinary commits; this repo mounts at `src/modules/esc_status_merge` and is
+   enabled by `CONFIG_MODULES_ESC_STATUS_MERGE` (`make px4_fmu-v5_compressor`). The root
+   `CMakeLists.txt` and `Kconfig` exist for this mode. `tools/patch_px4.py` is not used.
+2. **Out-of-tree** via `EXTERNAL_MODULES_LOCATION` (standalone, original pattern): everything below.
 
 ---
 
@@ -164,27 +170,20 @@ Start order relative to the ESC drivers doesn't matter.
 
 ## Combining with px4_flow_angle
 
-A build accepts only **one** `EXTERNAL_MODULES_LOCATION`, so two repos that each own a PX4 submodule
-won't compose. When an airframe needs both, use a thin firmware repo per airframe:
+A build accepts only **one** `EXTERNAL_MODULES_LOCATION`, so the two out-of-tree repos don't compose.
+That's why both now mount in-tree as submodules of the Compressor PX4 fork:
 
 ```
-compressor_firmware/
-├── PX4-Autopilot/                     # pinned v1.17.0
-├── src/
-│   ├── CMakeLists.txt                 # lists modules/esc_status_merge AND modules/flow_angle
-│   └── modules/
-│       ├── esc_status_merge/          # submodule or subtree from this repo
-│       └── flow_angle/
-├── msg/                               # flow-angle's custom msg + config_msg_list_external
-└── tools/patch_all.sh                 # runs both patch scripts with --px4 ../PX4-Autopilot
+PX4-Autopilot  (fork, branch compressor/v1.17)
+├── src/modules/esc_status_merge/   <- submodule: this repo
+├── src/modules/flow_angle/         <- submodule: px4_flow_angle
+└── boards/px4/fmu-v5/compressor.px4board
 ```
 
-Both patch scripts are idempotent, and the CMake reorder is detected by position, so running both on
-one tree is safe.
+## Updating PX4 (out-of-tree mode)
 
-## Updating PX4
-
-Check out the new tag, then run `tools/patch_px4.py`. If it errors, re-grep the consumers:
+In the fork, upgrading is a rebase of `compressor/v1.17` onto the new tag instead. Out-of-tree:
+check out the new tag, then run `tools/patch_px4.py`. If it errors, re-grep the consumers:
 
 ```bash
 grep -rn "ORB_ID(esc_status)" PX4-Autopilot/src/modules

@@ -1,0 +1,7 @@
+menuconfig MODULES_ESC_STATUS_MERGE
+	bool "esc_status_merge"
+	default n
+	---help---
+		Merge all esc_status instances (e.g. DShot + DroneCAN) into one
+		motor-ordered esc_status_merged topic. Requires the fork commit that
+		repoints the ESC consumers to esc_status_merged.
